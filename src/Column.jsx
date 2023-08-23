@@ -7,8 +7,8 @@ const Column = ({column,tasks}) => {
       <h3 className='text-[2.2rem] p-[8px]'>{column.title}</h3>
       <Droppable droppableId={column.id}>
         {
-          (provided) => (
-            <div className='p-[8px]'
+          (provided, snapshot) => (
+            <div className={`p-[8px] ${snapshot.isDraggingOver ? ' bg-gray-300 ' : ' bg-white '}`} 
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
