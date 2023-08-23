@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { DragDropContext } from 'react-beautiful-dnd'
+import { DragDropContext,Droppable } from 'react-beautiful-dnd'
 import {Column} from './Column'
 import './App.css'
-import { document } from 'postcss'
 
 const initialData = {
   tasks:{
@@ -19,10 +18,20 @@ const initialData = {
       id:'column-1',
       title:'To do',
       taskIds:['task-1', 'task-2', 'task-3', 'task-4', 'task-5', 'task-6']
+    },
+    'column-2':{
+      id:'column-2',
+      title:'In progress',
+      taskIds:[]
+    },
+    'column-3':{
+      id:'column-3',
+      title:'Done',
+      taskIds:[]
     }
   },
   //facilitate reordering of the columns
-  columnOrder :['column-1']
+  columnOrder :['column-1', 'column-2' ,'column-3'],
 }
 // {
 
@@ -72,10 +81,20 @@ const App = () => {
 
   const [data,setData] = useState(initialData)
   
+  const [homeIndex, setHomeIndex] = useState({})
+
+  const [home, setHome] = useState({})
+
   const onDragStart = (start) => {
   
     window.document.body.style.color = 'orange'
     window.document.body.style.transition = 'background-color 0.5s ease'
+
+    const homeIndex = data.columnOrder.indexOf(start.source.droppableId)
+
+    setHomeIndex({
+      homeIndex,
+    })
   }
 
   const onDragUpdate = (update) => {
@@ -85,6 +104,10 @@ const App = () => {
   }
   
   const onDragEnd = (result) => {
+
+    setHomeIndex({
+      homeIndex: null,
+    })
  
     window.document.body.style.color = 'black'
     window.document.body.style.backgroundColor = `white`
@@ -99,44 +122,92 @@ const App = () => {
       return;
     }
 
-    const column = data.columns[source.droppableId]
-    const newTaskIds = Array.from(column.taskIds)
-    newTaskIds.splice(source.index, 1)
-    newTaskIds.splice(destination.index, 0, draggableId)
+    const start = data.columns[source.droppableId]
+    const finish = data.columns[destination.droppableId]
 
-    const newColumn = {
-      ...column,
-      taskIds: newTaskIds
+    if(start === finish){
+
+        const newTaskIds = Array.from(start.taskIds)
+        newTaskIds.splice(source.index, 1)
+        newTaskIds.splice(destination.index, 0, draggableId)
+    
+        const newColumn = {
+          ...start,
+          taskIds: newTaskIds
+        }
+    
+        const newState = {
+          ...data,
+          columns:{
+          ...data.columns,
+          [newColumn.id] : newColumn
+          }
+        }
+        setData(newState)
+        return ;
     }
 
-    const newState = {
-      ...data,
-      columns:{
-      ...data.columns,
-      [newColumn.id] : newColumn
+    //moving from one list to another
+    const startTaskIds = Array.from(start.taskIds)
+    startTaskIds.splice(source.index, 1)
+
+    const newStart = {
+      ...start,
+      taskIds:startTaskIds
+    }
+
+    const finishTaskIds = Array.from(finish.taskIds)
+    finishTaskIds.splice(destination.index, 0, draggableId)
+
+    const newFinish = {
+      ...finish,
+      taskIds: finishTaskIds
+    }
+
+    setData({
+      ...data, 
+      columns: {
+        ...data.columns,
+        [newStart.id] : newStart,
+        [newFinish.id] : newFinish
       }
-    }
-    setData(newState)
+    })
+
   }
   
 
     return (
-      <div>
-        <DragDropContext
+      <DragDropContext
           onDragStart={onDragStart}
           onDragUpdate={onDragUpdate}
           onDragEnd={onDragEnd}
-        >
+      >
+        <Droppable
+        
+        droppableId='all-columns' direction='horizontal' type='column'>
+
+        {  (provided)=>(
+          <div className='flex '
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+          >
+
           {
-          data.columnOrder?.map((columnId) =>{
+          data.columnOrder?.map((columnId, index) =>{
             const column = data.columns[columnId]
             const tasks = column.taskIds.map(taskId => data.tasks[taskId])
-            return <Column key={column.id} column={column} tasks={tasks}/>
+
+            const isDropDisabled = index < homeIndex.homeIndex
+
+            return <Column key={column.id} column={column} tasks={tasks} isDropDisabled={isDropDisabled} index={index}/>
           })
           }
+          {provided.placeholder}
     
-        </DragDropContext>
-      </div>
+        </div>)
+        }
+        </Droppable>
+      </DragDropContext>
     )
   
 } 
