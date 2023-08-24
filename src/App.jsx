@@ -24,14 +24,9 @@ const initialData = {
       title:'In progress',
       taskIds:[]
     },
-    'column-3':{
-      id:'column-3',
-      title:'Done',
-      taskIds:[]
-    }
   },
   //facilitate reordering of the columns
-  columnOrder :['column-1', 'column-2' ,'column-3'],
+  columnOrder :['column-1', 'column-2' ],
 }
 // {
 
@@ -83,9 +78,8 @@ const App = () => {
   
   const [homeIndex, setHomeIndex] = useState({})
 
-  const [home, setHome] = useState({})
 
-  const onDragStart = (start) => {
+  const onDragStart = (start, provided) => {
   
     window.document.body.style.color = 'orange'
     window.document.body.style.transition = 'background-color 0.5s ease'
@@ -95,16 +89,21 @@ const App = () => {
     setHomeIndex({
       homeIndex,
     })
+    provided.announce('hello','hello world')
   }
 
-  const onDragUpdate = (update) => {
+  const onDragUpdate = (update, provided) => {
+    const message =update.destination ? 'hello world' : 'que mas ve'
+     provided.announce(message)
     const {destination} = update
     const opacity = destination ? destination.index / Object.keys(data.tasks).length : 0
     window.document.body.style.backgroundColor = `rgba(153, 141, 217, ${opacity})`
   }
   
-  const onDragEnd = (result) => {
+  const onDragEnd = (result, provided) => {
 
+    const message =result.destination ? 'hello world' : 'que mas ve'
+    provided.announce(message)
     setHomeIndex({
       homeIndex: null,
     })
@@ -112,7 +111,7 @@ const App = () => {
     window.document.body.style.color = 'black'
     window.document.body.style.backgroundColor = `white`
     //TODO: reorder our column
-    const {destination, source, draggableId} = result
+    const {destination, source, draggableId, type} = result
     
     if(!destination){
       return;
@@ -120,6 +119,22 @@ const App = () => {
 
     if( destination.droppableId === source.droppableId && destination.index === source.index){
       return;
+    }
+
+    if(type === 'column'){
+
+      const newColumnOrder = Array.from(data.columnOrder)
+      newColumnOrder.splice(source.index, 1)
+      newColumnOrder.splice(destination.index, 0 ,draggableId)
+
+      const newState = {
+        ...data,
+        columnOrder: newColumnOrder
+      }
+
+      setData(newState)
+      return ;
+
     }
 
     const start = data.columns[source.droppableId]

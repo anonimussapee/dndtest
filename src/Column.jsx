@@ -10,7 +10,7 @@ const Column = ({index, isDropDisabled, column, tasks}) => {
       
       {  (provided,snapshot) => (
       
-          <div className={`flex flex-col text-[1.7rem] m-[8px] border-[lightgrey] border-[1px] rounded-md w-[220px] ${snapshot.draggingOver ? 'bg-cyan-950' : 'bg-white'}`}
+          <div className={`flex flex-col text-[1.7rem] m-[8px] border-[lightgrey] border-[1px] rounded-md min-w-[300px] ${snapshot.draggingOver ? 'bg-cyan-950' : 'bg-white'}`}
             {...provided.draggableProps}
             ref={provided.innerRef}
           >
